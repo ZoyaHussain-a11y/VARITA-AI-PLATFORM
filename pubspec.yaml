@@ -1,0 +1,52 @@
+name: my_flutter_app
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core App Dependencies
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
+  web_socket_channel: ^3.0.3
+  image_picker: ^1.0.7
+  file_picker: ^10.3.7
+  http: ^1.1.0
+  cached_network_image: ^3.3.0
+  emoji_picker_flutter: ^4.4.0
+  mime: ^2.0.0
+  intl: ^0.20.2
+  provider: ^6.1.2
+  cupertino_icons: ^1.0.8
+
+  # Voice/Audio Dependencies (Speech-to-Text, Recording, Playback)
+  speech_to_text: ^7.3.0
+  record: ^6.1.2
+  audioplayers: ^6.0.0
+  permission_handler: ^12.0.1
+
+  # File/Path/Sharing Dependencies
+  path_provider: ^2.1.1
+  path: ^1.8.3
+  # FIXED: Upgraded version to resolve conflict with 'mime: ^2.0.0'
+  share_plus: ^12.0.1
+
+  # CRITICAL: Web compatibility for file saving/downloading
+  universal_html: ^2.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
