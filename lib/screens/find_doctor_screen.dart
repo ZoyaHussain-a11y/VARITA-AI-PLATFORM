@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/doctor_model.dart';
+import '../database/app_database.dart';
+import '../services/database_service.dart';
 import 'doctor_detail_screen.dart';
 
 // --- CONSTANTS AND COLORS (Shared) ---
@@ -20,135 +22,60 @@ class FindDoctorScreen extends StatefulWidget {
 class _FindDoctorScreenState extends State<FindDoctorScreen> {
   String _searchQuery = '';
   String? _selectedDepartment = 'Pediatrician';
+  late final DatabaseService _dbService;
+  List<DoctorData> _allDoctors = [];
+  List<DoctorData> _filteredDoctors = [];
+  bool _isLoading = true;
 
-  // CRITICAL: All mock data instances now use 'yrsExperience'.
-  final List<Doctor> _allDoctors = [
-    const Doctor(
-      name: 'Dr. Ali Ahmed',
-      specialty: 'Pediatrician',
-      imageUrl: 'assets/images/doctor_profile.png.png',
-      patients: 13000,
-      rating: 3.5,
-      yearsExperience: '10y+',
-      description:
-          'Dr. Ali Ahmed is an experienced Pediatrician providing compassionate care for children. He specializes in early diagnosis, prevention care, and personalized treatment.',
-      education: 'MBBS (King Edward Medical University), FCPS (Pediatrics)',
-      services: [
-        'General Check-up',
-        'Vaccination',
-        'Newborn Care',
-        'Adolescent Health',
-      ],
-    ),
-    const Doctor(
-      name: 'Dr. Fatima Ali',
-      specialty: 'Pediatrician',
-      imageUrl: 'assets/images/1.png',
-      patients: 500,
-      rating: 4.0,
-      yearsExperience: '5y+',
-      description:
-          'Dr. Fatima Ali focuses on holistic child healthcare, providing compassionate care for children from infancy through adolescence.',
-      education: 'MBBS (Dow Medical College), DCH (Pediatrics)',
-      services: [
-        'Growth Monitoring',
-        'Nutritional Advice',
-        'Immunization',
-        'Common Childhood Illnesses',
-      ],
-    ),
-    const Doctor(
-      name: 'Dr. Aisha Khan (Derm)',
-      specialty: 'Dermatologist',
-      imageUrl: 'assets/images/3.png.png',
-      patients: 1500,
-      rating: 4.5,
-      yearsExperience: '8y+',
-      description:
-          'Dr. Aisha Khan is an expert Dermatologist specializing in cosmetic procedures and advanced skin treatments.',
-      education: 'MBBS (Lahore Medical College), MCPS (Dermatology)',
-      services: [
-        'Acne Treatment',
-        'Laser Hair Removal',
-        'Chemical Peels',
-        'Botox and Fillers',
-      ],
-    ),
-    const Doctor(
-      name: 'Dr. Zoya Farooq',
-      specialty: 'Neurologist',
-      imageUrl:
-          'https://img.freepik.com/free-photo/female-doctor-with-stethoscope-on-white-background_1303-27756.jpg?size=626&ext=jpg',
-      patients: 750,
-      rating: 4.7,
-      yearsExperience: '6y+',
-      description:
-          'Dr. Zoya Farooq is a compassionate Neurologist specializing in headache disorders and epilepsy management.',
-      education: 'MBBS, MD (Neurology)',
-      services: ['Migraine Treatment', 'EEG', 'Nerve Conduction Studies'],
-    ),
-    const Doctor(
-      name: 'Dr. Khadija Khan',
-      specialty: 'Cardiologist',
-      imageUrl:
-          'https://img.freepik.com/free-photo/beautiful-female-doctor-posing-with-arms-crossed-hospital_1262-12844.jpg?size=626&ext=jpg',
-      patients: 1200,
-      rating: 4.8,
-      yearsExperience: '15y+',
-      description:
-          'Dr. Khadija Khan is a leading Cardiologist known for her expertise in interventional cardiology and cardiac rhythm disorders.',
-      education: 'MBBS (Aga Khan University), FCPS (Cardiology)',
-      services: [
-        'ECG',
-        'Echocardiography',
-        'Stress Testing',
-        'Cardiac Consultations',
-      ],
-    ),
-    const Doctor(
-      name: 'Dr. Hassan Raza',
-      specialty: 'Physician',
-      imageUrl:
-          'https://img.freepik.com/free-photo/portrait-confident-male-doctor-with-stethoscope-grey-background_177978-3806.jpg?size=626&ext=jpg',
-      patients: 800,
-      rating: 4.2,
-      yearsExperience: '7y+',
-      description:
-          'Dr. Hassan Raza is a general Physician providing comprehensive primary care, focusing on preventive medicine and chronic disease management.',
-      education: 'MBBS (Services Institute of Medical Sciences)',
-      services: [
-        'General Consultations',
-        'Diabetes Management',
-        'Hypertension Control',
-        'Annual Physicals',
-      ],
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _dbService = DatabaseService();
+    _loadDoctors();
+  }
 
-  List<Doctor> get _filteredDoctors {
-    List<Doctor> doctors = _allDoctors;
+  Future<void> _loadDoctors() async {
+    try {
+      final doctors = await _dbService.getAllDoctors();
+      setState(() {
+        _allDoctors = doctors;
+        _filteredDoctors = doctors;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading doctors: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _filterDoctors() {
+    List<DoctorData> filtered = _allDoctors;
 
     if (_selectedDepartment != null && _selectedDepartment != 'All') {
-      doctors = doctors
+      filtered = filtered
           .where((doctor) => doctor.specialty == _selectedDepartment)
           .toList();
     }
 
     if (_searchQuery.isNotEmpty) {
-      doctors = doctors
+      filtered = filtered
           .where(
             (doctor) =>
-                doctor.name.toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                ) ||
-                doctor.specialty.toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                ),
+                doctor.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                doctor.specialty
+                    .toLowerCase()
+                    .contains(_searchQuery.toLowerCase()),
           )
           .toList();
     }
-    return doctors;
+
+    setState(() {
+      _filteredDoctors = filtered;
+    });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -204,6 +131,7 @@ class _FindDoctorScreenState extends State<FindDoctorScreen> {
                   setState(() {
                     _searchQuery = value;
                   });
+                  _filterDoctors();
                 },
                 decoration: InputDecoration(
                   hintText: 'Search your doctor',
@@ -259,13 +187,22 @@ class _FindDoctorScreenState extends State<FindDoctorScreen> {
           ),
           const SizedBox(height: 20),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              itemCount: _filteredDoctors.length,
-              itemBuilder: (context, index) {
-                return _buildDoctorCard(context, _filteredDoctors[index]);
-              },
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredDoctors.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No doctors found',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        itemCount: _filteredDoctors.length,
+                        itemBuilder: (context, index) {
+                          return _buildDoctorCard(context, _filteredDoctors[index]);
+                        },
+                      ),
           ),
         ],
       ),
@@ -279,6 +216,7 @@ class _FindDoctorScreenState extends State<FindDoctorScreen> {
         setState(() {
           _selectedDepartment = department;
         });
+        _filterDoctors();
       },
       child: Container(
         margin: const EdgeInsets.only(right: 10),
@@ -312,7 +250,18 @@ class _FindDoctorScreenState extends State<FindDoctorScreen> {
     );
   }
 
-  Widget _buildDoctorCard(BuildContext context, Doctor doctor) {
+  Widget _buildDoctorCard(BuildContext context, DoctorData doctor) {
+    final doctorModel = Doctor(
+      name: doctor.name,
+      specialty: doctor.specialty,
+      imageUrl: doctor.imageUrl,
+      patients: doctor.patients,
+      rating: doctor.rating,
+      description: doctor.description,
+      education: doctor.education,
+      services: [], // Services will be loaded separately in DoctorDetailScreen
+      yearsExperience: doctor.yearsExperience,
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
       child: Card(
@@ -404,7 +353,7 @@ class _FindDoctorScreenState extends State<FindDoctorScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    DoctorDetailScreen(doctor: doctor),
+                                    DoctorDetailScreen(doctor: doctorModel),
                               ),
                             );
                           },

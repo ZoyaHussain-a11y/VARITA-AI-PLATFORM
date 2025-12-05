@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
-import 'screens/splash_screen.dart'; // Import the entry screen
+import 'screens/splash_screen.dart';
+import 'services/database_service.dart';
+import 'database/database_init.dart';
 
 // Define global constants for the app's theme
 const Color kPrimaryColor = Color(0xFFC2185B); // Doctor/Main App Color
 const Color kPatientColor = Color(0xFF279FF4); // Patient Color
 const Color kBackgroundColor = Color(0xFFF7F7F7);
 
-void main() {
+void main() async {
   // Ensure Flutter binding is initialized before running the app
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Drift database
+  final dbService = DatabaseService();
+  await dbService.initialize();
+  await DatabaseInitializer.initializeData(dbService.db);
+
   runApp(const VeritaApp());
 }
 
